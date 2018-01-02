@@ -14,16 +14,17 @@ public class TankMovement : MonoBehaviour {
 	public KeyCode upKey = KeyCode.W;
 	public KeyCode rightKey = KeyCode.D;
 	public KeyCode leftKey = KeyCode.A;
-	public float driveSpeed = 5.0f;
+	public static float driveSpeed = 3.0f;
 	int driveDirection = 0;
-	public float rotationSpeed = 100.0f;
+	public static float rotationSpeed = 200.0f;
 	int rotationDirection = 0;
 
+	public Rigidbody2D rigb;
 	public int score = 1;
 	public GameObject shot;
 	public Transform shotSpawn;
 	public float fireRate;
-
+	public int currentShots = 0;
 	private float nextFire;
 
 	void OnCollisionEnter2D (Collision2D col) {
@@ -40,11 +41,12 @@ public class TankMovement : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
-		{
-			if (Input.GetKeyDown (shotKey) && Time.time > nextFire)
-			{
+		if (Input.GetKeyDown (shotKey) && Time.time > nextFire) {
+			if (currentShots < 5) {
 				nextFire = Time.time + fireRate;
-				Instantiate(shot, shotSpawn.position, shotSpawn.rotation);
+				GameObject placed = Instantiate(shot, shotSpawn.position, shotSpawn.rotation);
+				placed.GetComponents<shot> () [0].owner = this;
+				currentShots = currentShots + 1;
 			}
 		}
 
@@ -79,9 +81,26 @@ public class TankMovement : MonoBehaviour {
 			rotationDirection = 0;
 		}
 	}
+
+	void MoveTank(float amount) {
+		//if (amount < 0.0001)
+		//	return;
+		
+		Vector3 tmpPos = transform.position;
+		Quaternion tmpRot = transform.rotation;
+
+		transform.position +=  transform.rotation * new Vector3(0, driveSpeed * driveDirection, 0) * amount;
+		transform.RotateAround (transform.position, new Vector3 (0, 0, 1), rotationSpeed * rotationDirection * amount);
+		//Collider2D[] list = new Collider2D[1];
+		//if (rigb.OverlapCollider(new ContactFilter2D(), list) > 0) {
+		//	transform.position = tmpPos;
+		//	transform.rotation = tmpRot;
+		//	MoveTank (amount / 2f);
+		//}
+	}
+
 	void FixedUpdate () {
-		transform.position +=  transform.rotation * new Vector3(0, driveSpeed * driveDirection, 0) * Time.deltaTime;
-		transform.RotateAround (transform.position, new Vector3 (0, 0, 1), rotationSpeed * rotationDirection * Time.deltaTime);
+		MoveTank (Time.deltaTime);
 	}
 
 }
